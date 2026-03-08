@@ -1,0 +1,122 @@
+// server/prisma/schema.prisma
+
+// ==========================================
+// CẤU HÌNH KẾT NỐI
+// ==========================================
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// ==========================================
+// ENUMS (Kiểu dữ liệu liệt kê)
+// ==========================================
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+  ALUMNI
+  PENDING
+}
+
+// ==========================================
+// MODELS (Các bảng dữ liệu)
+// ==========================================
+
+model User {
+  id            Int         @id @default(autoincrement())
+  fullName      String
+  studentId     String      @unique // Đổi idStudent thành studentId cho chuẩn tiếng Anh
+  dateOfBirth   DateTime?   
+  gender        Gender?
+  avatarUrl     String?
+  email         String      @unique
+  passwordHash  String
+  phone         String?
+  address       String?
+  courseYear    String?     // Ví dụ: "K65"
+  joinDate      DateTime    @default(now())
+  status        UserStatus  @default(PENDING)
+  facebookLink  String?
+
+  // Khóa ngoại liên kết với bảng Major (Ngành)
+  majorId       Int?
+  major         Major?      @relation(fields: [majorId], references: [id])
+
+  // Khóa ngoại liên kết với bảng Role (Vai trò hệ thống)
+  roleId        Int?
+  role          Role?       @relation(fields: [roleId], references: [id])
+
+  // Mối quan hệ nhiều-nhiều với Department thông qua bảng trung gian
+  departments   UserDepartment[]
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Faculty {
+  id            Int       @id @default(autoincrement())
+  facultyName   String
+  description   String?
+
+  // Một Khoa có nhiều Ngành
+  majors        Major[]
+}
+
+model Major {
+  id            Int       @id @default(autoincrement())
+  majorName     String
+  
+  // Khóa ngoại liên kết với bảng Faculty (Khoa)
+  facultyId     Int       // Đổi idKhoa thành facultyId
+  faculty       Faculty   @relation(fields: [facultyId], references: [id])
+
+  // Một Ngành có nhiều User học
+  users         User[]
+}
+
+model Role {
+  id              Int       @id @default(autoincrement())
+  roleName        String
+  description     String?
+  permissionLevel Int       @default(3) // 1=Admin, 2=Mod, 3=Member
+
+  users           User[]
+}
+
+model Department {
+  id              Int       @id @default(autoincrement())
+  departmentName  String
+  description     String?
+
+  users           UserDepartment[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// Bảng trung gian
+model UserDepartment {
+  userId           Int
+  departmentId     Int
+  roleInDepartment String?   // Ví dụ: "Trưởng ban", "Thành viên"
+  joinDate         DateTime  @default(now())
+  leaveDate        DateTime?
+  isActiveInDept   Boolean   @default(true)
+
+  user             User       @relation(fields: [userId], references: [id])
+  department       Department @relation(fields: [departmentId], references: [id])
+
+  // Khóa chính kết hợp
+  @@id([userId, departmentId])
+}
