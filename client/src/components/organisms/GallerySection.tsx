@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 // Tạo mảng 47 hình ảnh (Sử dụng công thức toán học i % 5 để fix hoàn toàn lỗi Hydration)
 const galleryImages = Array.from({ length: 47 }, (_, i) => ({
-  src: `/img/H${i + 1}.png`,
+  src: `/img/H${i + 1}.webp`,
   number: i + 1,
   floatDelay: (i % 5) * 1.2 
 }));
